@@ -15,6 +15,18 @@ class CompanyFormation(BaseModel):
     state_of_formation: str = Field(..., description="US state or territory")
     company_type: Literal["corporation", "LLC"] = Field(..., description="Type of company")
     incorporator_name: str = Field(..., description="Name of incorporator")
+    
+    # Additional fields for New York
+    mailing_address: str = Field(None, description="Mailing address")
+    email_address: str = Field(None, description="Email address")
+    phone_number: str = Field(None, description="Phone number")
+    exact_name_of_entity: str = Field(None, description="Exact name of entity")
+    
+    # Additional fields for filer information
+    filer_name: str = Field(None, description="Filer's name")
+    filer_company: str = Field(None, description="Filer's company")
+    filer_address: str = Field(None, description="Filer's address")
+    filer_city_state_zip: str = Field(None, description="Filer's city, state and zip")
 
     @validator('company_name')
     def validate_company_name(cls, v):
@@ -189,12 +201,12 @@ def generate_new_york_articles(company_data: CompanyFormation) -> BytesIO:
     
     # Header
     c.drawString(50, 720, f"CERTIFICATE OF INCORPORATION OF")
-    c.drawString(50, 700, f"{company_data.company_name}")
+    c.drawString(50, 700, f"{company_data.exact_name_of_entity or company_data.company_name}")
     c.drawString(50, 680, "Under Section 402 of the Business Corporation Law")
     
     # FIRST - Company Name
     c.drawString(50, 640, "FIRST: The name of the corporation is:")
-    c.drawString(70, 620, company_data.company_name)
+    c.drawString(70, 620, company_data.exact_name_of_entity or company_data.company_name)
     
     # SECOND - Purpose
     c.drawString(50, 580, "SECOND: The purpose of the corporation is to engage in any lawful act or activity")
@@ -205,29 +217,53 @@ def generate_new_york_articles(company_data: CompanyFormation) -> BytesIO:
     
     # THIRD - County Location
     c.drawString(50, 460, "THIRD: The county, within this state, in which the office of the corporation")
-    c.drawString(50, 440, "is to be located is: New York County.")
+    c.drawString(50, 440, "is to be located is: Albany County.")
     
-    # FOURTH - Authorized Shares
+    # FOURTH - Authorized Shares (Updated as requested)
     c.drawString(50, 400, "FOURTH: The corporation shall have authority to issue one class of shares")
-    c.drawString(50, 380, "consisting of 200 common shares without par value.")
+    c.drawString(50, 380, "consisting of 1,000 common shares with $0.01 par value per share.")
     
-    # FIFTH - Agent for Service
+    # FIFTH - Agent for Service (Updated address)
     c.drawString(50, 340, "FIFTH: The Secretary of State is designated as agent of the corporation")
     c.drawString(50, 320, "upon whom process against the corporation may be served.")
     c.drawString(50, 300, "The post office address to which the Secretary of State shall mail a copy")
     c.drawString(50, 280, "of any process against the corporation served upon the Secretary of State")
     c.drawString(50, 260, "by personal delivery is:")
-    c.drawString(70, 240, "New York Registered Agent, Inc.")
-    c.drawString(70, 220, "123 Broadway")
-    c.drawString(70, 200, "New York, NY 10001")
+    c.drawString(70, 240, "418 BROADWAY STE Y")
+    c.drawString(70, 220, "ALBANY, ALBANY COUNTY, NY 12207")
+    
+    # Optional email address
+    if company_data.email_address:
+        c.drawString(50, 200, "The email address to which the Secretary of State shall email a notice")
+        c.drawString(50, 180, "of the fact that process against the corporation has been served")
+        c.drawString(50, 160, "electronically upon the Secretary of State is:")
+        c.drawString(70, 140, company_data.email_address)
     
     # Signature section
-    c.drawString(50, 150, f"IN WITNESS WHEREOF, the undersigned, being the incorporator hereinbefore named,")
-    c.drawString(50, 130, f"has executed this Certificate of Incorporation this {datetime.now().strftime('%d')} day of")
-    c.drawString(50, 110, f"{datetime.now().strftime('%B, %Y')}.")
+    c.drawString(50, 100, f"IN WITNESS WHEREOF, the undersigned, being the incorporator hereinbefore named,")
+    c.drawString(50, 80, f"has executed this Certificate of Incorporation this {datetime.now().strftime('%d')} day of")
+    c.drawString(50, 60, f"{datetime.now().strftime('%B, %Y')}.")
     
-    c.drawString(50, 70, "Incorporator:")
-    c.drawString(70, 50, company_data.incorporator_name)
+    c.drawString(50, 30, "Incorporator:")
+    c.drawString(70, 10, company_data.incorporator_name)
+    
+    # Add filer information if provided
+    if company_data.filer_name or company_data.filer_company:
+        c.showPage()  # Start new page
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, 750, "FILER'S NAME AND MAILING ADDRESS")
+        c.setFont("Helvetica", 12)
+        
+        c.drawString(50, 700, "Name:")
+        c.drawString(70, 680, company_data.filer_name or "")
+        
+        if company_data.filer_company:
+            c.drawString(50, 650, "Company, if Applicable:")
+            c.drawString(70, 630, company_data.filer_company)
+        
+        c.drawString(50, 600, "Mailing Address:")
+        c.drawString(70, 580, company_data.filer_address or "")
+        c.drawString(70, 560, company_data.filer_city_state_zip or "")
     
     c.save()
     buffer.seek(0)
@@ -244,34 +280,58 @@ def generate_new_york_llc_certificate(company_data: CompanyFormation) -> BytesIO
     
     # Header
     c.drawString(50, 720, f"ARTICLES OF ORGANIZATION OF")
-    c.drawString(50, 700, f"{company_data.company_name}")
+    c.drawString(50, 700, f"{company_data.exact_name_of_entity or company_data.company_name}")
     c.drawString(50, 680, "Under Section 203 of the Limited Liability Company Law")
     
     # FIRST - Company Name
     c.drawString(50, 640, "FIRST: The name of the limited liability company is:")
-    c.drawString(70, 620, company_data.company_name)
+    c.drawString(70, 620, company_data.exact_name_of_entity or company_data.company_name)
     
-    # SECOND - County Location
+    # SECOND - County Location (Updated to Albany County)
     c.drawString(50, 580, "SECOND: The county within this state in which the office of the limited")
-    c.drawString(50, 560, "liability company is to be located is: New York County.")
+    c.drawString(50, 560, "liability company is to be located is: Albany County.")
     
-    # THIRD - Agent for Service
+    # THIRD - Agent for Service (Updated address)
     c.drawString(50, 520, "THIRD: The Secretary of State is designated as agent of the limited")
     c.drawString(50, 500, "liability company upon whom process against the limited liability company")
     c.drawString(50, 480, "may be served.")
     c.drawString(50, 460, "The post office address to which the Secretary of State shall mail a copy")
     c.drawString(50, 440, "of any process against the limited liability company served upon the")
     c.drawString(50, 420, "Secretary of State by personal delivery is:")
-    c.drawString(70, 400, "New York Registered Agent, Inc.")
-    c.drawString(70, 380, "123 Broadway")
-    c.drawString(70, 360, "New York, NY 10001")
+    c.drawString(70, 400, "418 BROADWAY STE Y")
+    c.drawString(70, 380, "ALBANY, ALBANY COUNTY, NY 12207")
+    
+    # Optional email address
+    if company_data.email_address:
+        c.drawString(50, 340, "The email address to which the Secretary of State shall email a notice")
+        c.drawString(50, 320, "of the fact that process against the limited liability company has been")
+        c.drawString(50, 300, "served electronically upon the Secretary of State is:")
+        c.drawString(70, 280, company_data.email_address)
     
     # Signature section
-    c.drawString(50, 300, f"IN WITNESS WHEREOF, the undersigned has executed these Articles of Organization")
-    c.drawString(50, 280, f"this {datetime.now().strftime('%d')} day of {datetime.now().strftime('%B, %Y')}.")
+    c.drawString(50, 240, f"IN WITNESS WHEREOF, the undersigned has executed these Articles of Organization")
+    c.drawString(50, 220, f"this {datetime.now().strftime('%d')} day of {datetime.now().strftime('%B, %Y')}.")
     
-    c.drawString(50, 240, "Organizer:")
-    c.drawString(70, 220, company_data.incorporator_name)
+    c.drawString(50, 180, "Organizer:")
+    c.drawString(70, 160, company_data.incorporator_name)
+    
+    # Add filer information if provided
+    if company_data.filer_name or company_data.filer_company:
+        c.showPage()  # Start new page
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, 750, "FILER'S NAME AND MAILING ADDRESS")
+        c.setFont("Helvetica", 12)
+        
+        c.drawString(50, 700, "Name:")
+        c.drawString(70, 680, company_data.filer_name or "")
+        
+        if company_data.filer_company:
+            c.drawString(50, 650, "Company, if Applicable:")
+            c.drawString(70, 630, company_data.filer_company)
+        
+        c.drawString(50, 600, "Mailing Address:")
+        c.drawString(70, 580, company_data.filer_address or "")
+        c.drawString(70, 560, company_data.filer_city_state_zip or "")
     
     c.save()
     buffer.seek(0)
@@ -288,7 +348,15 @@ def form_company():
                 "company_name": request.form.get("company_name"),
                 "state_of_formation": request.form.get("state_of_formation"),
                 "company_type": request.form.get("company_type"),
-                "incorporator_name": request.form.get("incorporator_name")
+                "incorporator_name": request.form.get("incorporator_name"),
+                "mailing_address": request.form.get("mailing_address"),
+                "email_address": request.form.get("email_address"),
+                "phone_number": request.form.get("phone_number"),
+                "exact_name_of_entity": request.form.get("exact_name_of_entity"),
+                "filer_name": request.form.get("filer_name"),
+                "filer_company": request.form.get("filer_company"),
+                "filer_address": request.form.get("filer_address"),
+                "filer_city_state_zip": request.form.get("filer_city_state_zip")
             }
         
         company_data = CompanyFormation(**data)
@@ -359,13 +427,29 @@ def form_company_schema():
             "company_name": "Empire State Corp",
             "state_of_formation": "NY",
             "company_type": "corporation",
-            "incorporator_name": "Robert Johnson"
+            "incorporator_name": "Robert Johnson",
+            "mailing_address": "123 Main Street, New York, NY 10001",
+            "email_address": "robert@empirestate.com",
+            "phone_number": "(555) 123-4567",
+            "exact_name_of_entity": "Empire State Corp",
+            "filer_name": "Robert Johnson",
+            "filer_company": "Empire State Legal Services",
+            "filer_address": "456 Broadway",
+            "filer_city_state_zip": "New York, NY 10013"
         },
         {
             "company_name": "Big Apple Ventures, LLC",
             "state_of_formation": "NY",
             "company_type": "LLC",
-            "incorporator_name": "Sarah Williams"
+            "incorporator_name": "Sarah Williams",
+            "mailing_address": "789 Fifth Avenue, New York, NY 10022",
+            "email_address": "sarah@bigappleventures.com",
+            "phone_number": "(555) 987-6543",
+            "exact_name_of_entity": "Big Apple Ventures, LLC",
+            "filer_name": "Sarah Williams",
+            "filer_company": "Big Apple Legal Group",
+            "filer_address": "321 Park Avenue",
+            "filer_city_state_zip": "New York, NY 10010"
         }
     ]
     return jsonify(examples)
