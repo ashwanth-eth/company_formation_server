@@ -471,35 +471,82 @@ def company_form():
     <head>
         <title>Company Formation</title>
         <style>
-            body {{ font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }}
+            body {{ font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }}
             form {{ display: grid; gap: 15px; }}
             label {{ font-weight: bold; }}
-            input, select {{ padding: 8px; font-size: 16px; }}
-            button {{ background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; }}
+            input, select, textarea {{ padding: 8px; font-size: 16px; width: 100%; box-sizing: border-box; }}
+            button {{ background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; font-size: 16px; }}
             button:hover {{ background: #0056b3; }}
+            .section {{ border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 5px; }}
+            .section h3 {{ margin-top: 0; color: #333; }}
+            .optional {{ color: #666; font-size: 14px; }}
         </style>
+        <script>
+            function toggleNYFields() {{
+                const state = document.getElementById('state_of_formation').value;
+                const nyFields = document.getElementById('ny-fields');
+                if (state === 'NY') {{
+                    nyFields.style.display = 'block';
+                }} else {{
+                    nyFields.style.display = 'none';
+                }}
+            }}
+        </script>
     </head>
     <body>
         <h1>Company Formation</h1>
         <form action="/form-company" method="POST">
-            <label for="company_name">Company Name:</label>
-            <input type="text" id="company_name" name="company_name" required>
+            <div class="section">
+                <h3>Basic Information</h3>
+                <label for="company_name">Company Name:</label>
+                <input type="text" id="company_name" name="company_name" required>
+                
+                <label for="state_of_formation">State of Formation:</label>
+                <select id="state_of_formation" name="state_of_formation" required onchange="toggleNYFields()">
+                    <option value="">Select a state</option>
+                    {"".join(f'<option value="{state}">{state}</option>' for state in states)}
+                </select>
+                
+                <label for="company_type">Company Type:</label>
+                <select id="company_type" name="company_type" required>
+                    <option value="">Select a type</option>
+                    <option value="corporation">Corporation</option>
+                    <option value="LLC">LLC</option>
+                </select>
+                
+                <label for="incorporator_name">Incorporator Name:</label>
+                <input type="text" id="incorporator_name" name="incorporator_name" required>
+            </div>
             
-            <label for="state_of_formation">State of Formation:</label>
-            <select id="state_of_formation" name="state_of_formation" required>
-                <option value="">Select a state</option>
-                {"".join(f'<option value="{state}">{state}</option>' for state in states)}
-            </select>
-            
-            <label for="company_type">Company Type:</label>
-            <select id="company_type" name="company_type" required>
-                <option value="">Select a type</option>
-                <option value="corporation">Corporation</option>
-                <option value="LLC">LLC</option>
-            </select>
-            
-            <label for="incorporator_name">Incorporator Name:</label>
-            <input type="text" id="incorporator_name" name="incorporator_name" required>
+            <div id="ny-fields" class="section" style="display: none;">
+                <h3>Additional Information for New York</h3>
+                <p class="optional">These fields are optional but recommended for New York filings</p>
+                
+                <label for="exact_name_of_entity">Exact Name of Entity:</label>
+                <input type="text" id="exact_name_of_entity" name="exact_name_of_entity" placeholder="Same as company name if not specified">
+                
+                <label for="mailing_address">Mailing Address:</label>
+                <textarea id="mailing_address" name="mailing_address" rows="3" placeholder="Street address, city, state, zip"></textarea>
+                
+                <label for="email_address">Email Address:</label>
+                <input type="email" id="email_address" name="email_address" placeholder="your@email.com">
+                
+                <label for="phone_number">Phone Number:</label>
+                <input type="tel" id="phone_number" name="phone_number" placeholder="(555) 123-4567">
+                
+                <h4>Filer Information</h4>
+                <label for="filer_name">Filer's Name:</label>
+                <input type="text" id="filer_name" name="filer_name" placeholder="Name of person filing">
+                
+                <label for="filer_company">Filer's Company (if applicable):</label>
+                <input type="text" id="filer_company" name="filer_company" placeholder="Company name">
+                
+                <label for="filer_address">Filer's Address:</label>
+                <textarea id="filer_address" name="filer_address" rows="2" placeholder="Street address"></textarea>
+                
+                <label for="filer_city_state_zip">City, State, Zip:</label>
+                <input type="text" id="filer_city_state_zip" name="filer_city_state_zip" placeholder="City, State, Zip Code">
+            </div>
             
             <button type="submit">Submit</button>
         </form>
