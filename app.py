@@ -178,6 +178,105 @@ def generate_california_llc_certificate(company_data: CompanyFormation) -> Bytes
     buffer.seek(0)
     return buffer
 
+def generate_new_york_articles(company_data: CompanyFormation) -> BytesIO:
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    
+    # Set up the document
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(300, 750, "CERTIFICATE OF INCORPORATION")
+    c.setFont("Helvetica", 12)
+    
+    # Header
+    c.drawString(50, 720, f"CERTIFICATE OF INCORPORATION OF")
+    c.drawString(50, 700, f"{company_data.company_name}")
+    c.drawString(50, 680, "Under Section 402 of the Business Corporation Law")
+    
+    # FIRST - Company Name
+    c.drawString(50, 640, "FIRST: The name of the corporation is:")
+    c.drawString(70, 620, company_data.company_name)
+    
+    # SECOND - Purpose
+    c.drawString(50, 580, "SECOND: The purpose of the corporation is to engage in any lawful act or activity")
+    c.drawString(50, 560, "for which a corporation may be organized under the Business Corporation Law.")
+    c.drawString(50, 540, "The corporation is not formed to engage in any act or activity requiring the")
+    c.drawString(50, 520, "consent or approval of any state official, department, board, agency or other")
+    c.drawString(50, 500, "body without such consent or approval first being obtained.")
+    
+    # THIRD - County Location
+    c.drawString(50, 460, "THIRD: The county, within this state, in which the office of the corporation")
+    c.drawString(50, 440, "is to be located is: New York County.")
+    
+    # FOURTH - Authorized Shares
+    c.drawString(50, 400, "FOURTH: The corporation shall have authority to issue one class of shares")
+    c.drawString(50, 380, "consisting of 200 common shares without par value.")
+    
+    # FIFTH - Agent for Service
+    c.drawString(50, 340, "FIFTH: The Secretary of State is designated as agent of the corporation")
+    c.drawString(50, 320, "upon whom process against the corporation may be served.")
+    c.drawString(50, 300, "The post office address to which the Secretary of State shall mail a copy")
+    c.drawString(50, 280, "of any process against the corporation served upon the Secretary of State")
+    c.drawString(50, 260, "by personal delivery is:")
+    c.drawString(70, 240, "New York Registered Agent, Inc.")
+    c.drawString(70, 220, "123 Broadway")
+    c.drawString(70, 200, "New York, NY 10001")
+    
+    # Signature section
+    c.drawString(50, 150, f"IN WITNESS WHEREOF, the undersigned, being the incorporator hereinbefore named,")
+    c.drawString(50, 130, f"has executed this Certificate of Incorporation this {datetime.now().strftime('%d')} day of")
+    c.drawString(50, 110, f"{datetime.now().strftime('%B, %Y')}.")
+    
+    c.drawString(50, 70, "Incorporator:")
+    c.drawString(70, 50, company_data.incorporator_name)
+    
+    c.save()
+    buffer.seek(0)
+    return buffer
+
+def generate_new_york_llc_certificate(company_data: CompanyFormation) -> BytesIO:
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    
+    # Set up the document
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(300, 750, "ARTICLES OF ORGANIZATION")
+    c.setFont("Helvetica", 12)
+    
+    # Header
+    c.drawString(50, 720, f"ARTICLES OF ORGANIZATION OF")
+    c.drawString(50, 700, f"{company_data.company_name}")
+    c.drawString(50, 680, "Under Section 203 of the Limited Liability Company Law")
+    
+    # FIRST - Company Name
+    c.drawString(50, 640, "FIRST: The name of the limited liability company is:")
+    c.drawString(70, 620, company_data.company_name)
+    
+    # SECOND - County Location
+    c.drawString(50, 580, "SECOND: The county within this state in which the office of the limited")
+    c.drawString(50, 560, "liability company is to be located is: New York County.")
+    
+    # THIRD - Agent for Service
+    c.drawString(50, 520, "THIRD: The Secretary of State is designated as agent of the limited")
+    c.drawString(50, 500, "liability company upon whom process against the limited liability company")
+    c.drawString(50, 480, "may be served.")
+    c.drawString(50, 460, "The post office address to which the Secretary of State shall mail a copy")
+    c.drawString(50, 440, "of any process against the limited liability company served upon the")
+    c.drawString(50, 420, "Secretary of State by personal delivery is:")
+    c.drawString(70, 400, "New York Registered Agent, Inc.")
+    c.drawString(70, 380, "123 Broadway")
+    c.drawString(70, 360, "New York, NY 10001")
+    
+    # Signature section
+    c.drawString(50, 300, f"IN WITNESS WHEREOF, the undersigned has executed these Articles of Organization")
+    c.drawString(50, 280, f"this {datetime.now().strftime('%d')} day of {datetime.now().strftime('%B, %Y')}.")
+    
+    c.drawString(50, 240, "Organizer:")
+    c.drawString(70, 220, company_data.incorporator_name)
+    
+    c.save()
+    buffer.seek(0)
+    return buffer
+
 @app.route('/form-company', methods=['POST'])
 def form_company():
     try:
@@ -208,9 +307,16 @@ def form_company():
                 pdf_buffer = generate_california_llc_certificate(company_data)
             else:
                 return jsonify({"error": "Unsupported company type"}), 400
+        elif company_data.state_of_formation == 'NY':
+            if company_data.company_type == 'corporation':
+                pdf_buffer = generate_new_york_articles(company_data)
+            elif company_data.company_type == 'LLC':
+                pdf_buffer = generate_new_york_llc_certificate(company_data)
+            else:
+                return jsonify({"error": "Unsupported company type"}), 400
         else:
             return jsonify({
-                "error": "Only Delaware and California entities are supported at this time"
+                "error": "Only Delaware, California, and New York entities are supported at this time"
             }), 400
     
         return send_file(
@@ -248,6 +354,18 @@ def form_company_schema():
             "state_of_formation": "CA",
             "company_type": "LLC",
             "incorporator_name": "Emily Chen"
+        },
+        {
+            "company_name": "Empire State Corp",
+            "state_of_formation": "NY",
+            "company_type": "corporation",
+            "incorporator_name": "Robert Johnson"
+        },
+        {
+            "company_name": "Big Apple Ventures, LLC",
+            "state_of_formation": "NY",
+            "company_type": "LLC",
+            "incorporator_name": "Sarah Williams"
         }
     ]
     return jsonify(examples)
@@ -306,5 +424,5 @@ def company_form():
     '''
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 5001))
     app.run(debug=True, port=port)
