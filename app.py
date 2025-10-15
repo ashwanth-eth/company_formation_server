@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_file
 from pydantic import BaseModel, Field, validator
-from typing import Literal
+from typing import Literal, Optional
 import re
 from io import BytesIO
 from reportlab.pdfgen import canvas
@@ -17,16 +17,16 @@ class CompanyFormation(BaseModel):
     incorporator_name: str = Field(..., description="Name of incorporator")
     
     # Additional fields for New York
-    mailing_address: str = Field(None, description="Mailing address")
-    email_address: str = Field(None, description="Email address")
-    phone_number: str = Field(None, description="Phone number")
-    exact_name_of_entity: str = Field(None, description="Exact name of entity")
+    mailing_address: Optional[str] = Field(None, description="Mailing address")
+    email_address: Optional[str] = Field(None, description="Email address")
+    phone_number: Optional[str] = Field(None, description="Phone number")
+    exact_name_of_entity: Optional[str] = Field(None, description="Exact name of entity")
     
     # Additional fields for filer information
-    filer_name: str = Field(None, description="Filer's name")
-    filer_company: str = Field(None, description="Filer's company")
-    filer_address: str = Field(None, description="Filer's address")
-    filer_city_state_zip: str = Field(None, description="Filer's city, state and zip")
+    filer_name: Optional[str] = Field(None, description="Filer's name")
+    filer_company: Optional[str] = Field(None, description="Filer's company")
+    filer_address: Optional[str] = Field(None, description="Filer's address")
+    filer_city_state_zip: Optional[str] = Field(None, description="Filer's city, state and zip")
 
     @validator('company_name')
     def validate_company_name(cls, v):
